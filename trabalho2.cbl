@@ -57,7 +57,8 @@
       *parte do index/ids automaticos
            select OPTIONAL arquivo-index_ids
            assign to "index_ids.dat"
-           organization is SEQUENTIAL.
+           organization is SEQUENTIAL
+           file status is fs-ids.
        DATA DIVISION.
        FILE SECTION.
       *parte de clientes
@@ -186,11 +187,9 @@
        01  ss-prod_faturas.
            10 ss-prod_faturas-1 pic x(001).
            10 ss-prod_faturas-2 pic x(001).
-      *ids automaticos
        01  fs-ids.
            10 fs-ids-1 pic x(001).
            10 fs-ids-2 pic x(001).
-
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
            perform load_ids.
@@ -198,17 +197,17 @@
            STOP RUN.
       *sistema de carregar os ids.
        load_ids.
-       display "Carregando os ids".
-       open input arquivo-index_ids.
-       read arquivo-index_ids.
-       move registo-index_ids_clientes to index_ids_clientes.
-       move registo-index_ids_produtos to index_ids_produtos.
-       move registo-index_ids_faturas to index_ids_faturas.
-       close arquivo-index_ids.
-       display "Ids carregados com sucesso".
-       display index_ids_clientes.
-       display index_ids_produtos.
-       display index_ids_faturas.
+            display "Carregando os ids".
+            open input arquivo-index_ids.
+            read arquivo-index_ids
+            move registo-index_ids_clientes to index_ids_clientes
+            move registo-index_ids_produtos to index_ids_produtos
+            move registo-index_ids_faturas to index_ids_faturas
+            close arquivo-index_ids.
+            display "Ids carregados com sucesso".
+            display index_ids_clientes.
+            display index_ids_produtos.
+            display index_ids_faturas.
       *salvar os ids no ficheiro
        save_ids.
        open output arquivo-index_ids.
