@@ -54,36 +54,32 @@
            select ord-prod_faturas
               assign to "SORTprodutos_faturas.dat"
               sort status is ss-prod_faturas.
-      *parte do ficheiro de index/id automatico
-           select optional index_id
-              assign to "index_id12.dat"
-              organization is indexed
-              access mode is dynamic
-              access mode is dynamic
-              record key is id_index
-              file status is fs_id_index
+      *parte do index/ids automaticos
+           select OPTIONAL arquivo-index_ids
+           assign to "index_ids.dat"
+           organization is SEQUENTIAL.
        DATA DIVISION.
        FILE SECTION.
       *parte de clientes
        FD  clientes.
        01  reg-clientes.
            10 reg-clientes-id pic 99.
-           10 reg-cliente-nome pic x(50).
+           10 reg-clientes-nome pic x(50).
            10 reg-clientes-data-nasc.
-              20 clientes-data-nasc-ano pic 9(004).
-              20 clientes-data-nasc-mes pic 9(002).
-              20 clientes-data-nasc-dia pic 9(002).
+              20 reg-clientes-data-ano pic 9(004).
+              20 reg-clientes-data-mes pic 9(002).
+              20 reg-clientes-data-dia pic 9(002).
            10 reg-clientes-morada pic x(50).
-           10 reg-cliente-telefone pic x(12).
-           10 reg-cliente-nif pic 9(9).
+           10 reg-clientes-telefone pic x(12).
+           10 reg-clientes-nif pic 9(9).
        SD  ord-clientes.
        01  sort-reg-clientes.
          10 sort-clientes-id pic 99.
          10 sort-clientes-nome pic x(50).
          10 clientes-data-nasc.
-            20 clientes-data-nasc-ano pic 9(004).
-            20 clientes-data-nasc-mes pic 9(002).
-            20 clientes-data-nasc-dia pic 9(002).
+            20 clientes-data-ano pic 9(004).
+            20 clientes-data-mes pic 9(002).
+            20 clientes-data-dia pic 9(002).
          10 sort-clientes-morada pic x(50).
          10 sort-clientes-telefone pic x(12).
          10 sort-clientes-nif pic 9(9).
@@ -93,18 +89,18 @@
            10 reg-produtos-id pic 99.
            10 reg-produtos-nome pic x(50).
            10 reg-produtos-tipo pic x(50).
-              88 compota value "c" "C".
-              88 marmelada value "m" "M".
-              88 licor value "l" "L".
+              88 reg-compota value "c" "C".
+              88 reg-marmelada value "m" "M".
+              88 reg-licor value "l" "L".
            10 reg-produtos-stock pic 9(3).
        SD  ord-produtos.
        01  sort-reg-produtos.
          10 sort-produtos-id pic 99.
          10 sort-produtos-nome pic x(50).
          10 sort-produtos-tipo pic x(50).
-            88 compota value "c" "C".
-            88 marmelada value "m" "M".
-            88 licor value "l" "L".
+            88 sort-compota value "c" "C".
+            88 sort-marmelada value "m" "M".
+            88 sort-licor value "l" "L".
          10 sort-produtos-stock pic 9(3).
       *parte faturas
        FD  faturas.
@@ -138,16 +134,20 @@
          10 sort-prod_faturas_id pic 99.
          10 sort-prod_faturas_nome pic x(50).
          10 sort-prod_faturas_quant pic 99.
-      *parte do ficheiro de index/id automatico
-       FD  index_id.
-       01  reg-index_id.
-           10 id_index pic 99.
-           10 id-clientes pic 99.
-           10 id-produtos pic 99.
-           10 id-faturas pic 99.
-           
+      *parte do index/id automatico
+       01  arquivo pic x.
+       FD  arquivo-index_ids.
+       01  registo-index_ids.
+           05 registo-index_ids_clientes pic 999.
+           05 registo-index_ids_produtos pic 999.
+           05 registo-index_ids_faturas pic 999.           
 
        WORKING-STORAGE SECTION.
+      *Variaveis para guardar o index/id automatico
+       01  index_ids.
+           02 index_ids_clientes pic 999 value zeros.
+           02 index_ids_produtos pic 999 value zeros.
+           02 index_ids_faturas pic 999 value zeros.
       *variaveis para procura de dados
        77  registo_encontrado pic x(001) value "n".
        77  codigo_encontrado pic 9(004).
@@ -186,11 +186,37 @@
        01  ss-prod_faturas.
            10 ss-prod_faturas-1 pic x(001).
            10 ss-prod_faturas-2 pic x(001).
+      *ids automaticos
+       01  fs-ids.
+           10 fs-ids-1 pic x(001).
+           10 fs-ids-2 pic x(001).
 
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
+           perform load_ids.
            perform menu until opcao = 0.
            STOP RUN.
+      *sistema de carregar os ids.
+       load_ids.
+       display "Carregando os ids".
+       open input arquivo-index_ids.
+       read arquivo-index_ids.
+       move registo-index_ids_clientes to index_ids_clientes.
+       move registo-index_ids_produtos to index_ids_produtos.
+       move registo-index_ids_faturas to index_ids_faturas.
+       close arquivo-index_ids.
+       display "Ids carregados com sucesso".
+       display index_ids_clientes.
+       display index_ids_produtos.
+       display index_ids_faturas.
+      *salvar os ids no ficheiro
+       save_ids.
+       open output arquivo-index_ids.
+           move index_ids_clientes to registo-index_ids_clientes
+           move index_ids_produtos to registo-index_ids_produtos
+           move index_ids_faturas to registo-index_ids_faturas
+           write registo-index_ids.
+       close arquivo-index_ids.
       *menus de opções
        menu.
            display "******MENU DE OPCOES******".
@@ -199,6 +225,7 @@
            display "3. Alterar".
            display "4. Eliminar".  
            display "5. Ordenar".
+           display "0. Sair".
            display "**************************".
            display "Escolha a opcao que quer: ".
            accept opcao.
@@ -310,15 +337,32 @@
            end-evaluate.
       *inserir         
        inserir_clientes.
+           open i-o clientes.
+           move space to reg-clientes.
+           move zeros to reg-clientes.
            display "******INFORMACOES DO CLIENTE******".
+           move index_ids_clientes to reg-clientes-id.
            display "Nome: ".
+           accept reg-clientes-nome.
            display "Morada: ".
+           accept reg-clientes-morada.
            display "Telemovel: ".
+           accept reg-clientes-telefone.
            display "NIF: ".
+           accept reg-clientes-nif.
            display "Dia de nascimento: ".
+           accept reg-clientes-data-dia.
            display "Mes de nascimento: ".
+           accept reg-clientes-data-mes.
            display "Ano de nascinento:".
+           accept reg-clientes-data-ano.
            display "**********************************".
+           write reg-clientes
+              invalid key
+              display "Codigo: " reg-clientes-id " foi registado".
+           close clientes.
+           compute index_ids_clientes = index_ids_clientes + 1.
+           perform save_ids.
            display "Quer introduzir mais algum cliente?".
            accept opcao_continuar.
            perform until (opcao_continuar = "S" or
@@ -338,15 +382,15 @@
            display "******INFORMACOES DO PRODUTO******".
            display "Nome: ".
            display "Tipo do produto: ".
-           perform until (reg-produto-tipo = "l" or
-                          reg-produto-tipo = "L" or
-                          reg-produto-tipo = "m" or
-                          reg-produto-tipo = "M" or
-                          reg-produto-tipo = "c" or
-                          reg-produto-tipo = "C")
+           perform until (reg-produtos-tipo = "l" or
+                          reg-produtos-tipo = "L" or
+                          reg-produtos-tipo = "m" or
+                          reg-produtos-tipo = "M" or
+                          reg-produtos-tipo = "c" or
+                          reg-produtos-tipo = "C")
                 display "ERRO - Tipo de produto invalido."
                 display "Volta a introduzir o tipo de produto(l/m/c): "
-                accept reg-produto-tipo    
+                accept reg-produtos-tipo    
            end-perform.
            display "Stock: ".
            display "**********************************".
