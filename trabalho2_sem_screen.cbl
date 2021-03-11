@@ -15,7 +15,7 @@
               organization is indexed
               access mode is dynamic
               record key is reg-clientes-id
-              alternate key is reg-clientes-morada with duplicates
+              alternate key is reg-clientes-nome with duplicates
               file status is fs-clientes.
            select ord-clientes
               assign to "SORTclientes.dat"
@@ -50,8 +50,8 @@
       *parte do index/ids automaticos
            select OPTIONAL arquivo-index_ids
            assign to "index_ids.dat"
-           organization is SEQUENTIAL
-           file status is fs-ids.
+           organization is SEQUENTIAL.
+      *     file status is fs-ids.
        DATA DIVISION.
        FILE SECTION.
       *parte de clientes
@@ -121,10 +121,10 @@
            05 registo-index_ids_produtos pic 999.
            05 registo-index_ids_faturas pic 999.
       * ficheiro de imprsã
-       FD  impressao linage is 66 lines with footing at 5 lines
+       FD  impressao linage is 7 lines with footing at 5 lines
               at top 2 lines at bottom 1.
        01 reg-impressao.
-           10 impressoa-filler pic x(080).
+           10 impressoa-filler pic x(180).
 
        WORKING-STORAGE SECTION.
       *Variavel para performs
@@ -231,31 +231,8 @@
        77  wrk-opcao pic x(001) value spaces.
        77  tecla pic x value space.
 
-      * SCREEN SECTION.
-      * 01  ecra-principal.
-      *   02 blank screen BACKGROUND-COLOR 5.
-      *   02 line 1 col 1 value "-----------------------------------  
-    - *   "---------------------------------------" BACKGROUND-COLOR 5.
-      *   02 line 2 col 21 value "Manutencao de Clientes - Menu Principal    
-    - *     "" BACKGROUND-COLOR 5.
-      *   02 line 3 col 1 value "---------------------------------------
-    - *   "--------------------------------------." BACKGROUND-COLOR 5.
-      *   02 line 11 col 34 value "1 - Inserir" BACKGROUND-COLOR 5.
-      *   02 line 12 col 34 value "2 - Alterar" BACKGROUND-COLOR 5.
-      *   02 line 13 col 34 value "3 - Consultar" BACKGROUND-COLOR 5.
-      *   02 line 14 col 34 value "4 - Excluir" BACKGROUND-COLOR 5.
-      *   02 line 15 col 34 value "0 - Sair" BACKGROUND-COLOR 5.
-      *   02 line 17 col 34 value "Opcao: ( )" BACKGROUND-COLOR 5.
-      *   02 opc line 17 col 42 pic x using wrk-opcao auto
-      *         BACKGROUND-COLOR 5.
-
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
-      *     display ecra-principal.
-      *     accept ecra-principal.
-      *     display "continuar" at line 16 column 14.
-      *     accept tecla no-echo at line 16 column 40.
-
            perform load_ids.
            perform menu until opcao = 0.
            STOP RUN.
@@ -282,17 +259,20 @@
        close arquivo-index_ids.
       *menus de opções
        menu.
-           display "******MENU DE OPCOES******".
+           display "-------------------------------------------".
+           display "MENU DE OPCOES".
+           display "-------------------------------------------".
            display "1. Inserir".
            display "2. Listar".
            display "3. Alterar".
            display "4. Eliminar".
            display "5. Ordenar".
-           display "6. Imprimir"
+           display "6. Imprimir".
            display "0. Sair".
-           display "**************************".
+           display "-------------------------------------------".
            display "Escolha a opcao que quer: ".
            accept opcao.
+           display "-------------------------------------------".
            evaluate true
                when OPCAO = 1
                    perform menu_inserir
@@ -311,14 +291,14 @@
                when OTHER
                    DISPLAY "OPCAO INVALIDA!"
                    DISPLAY "Volte a introduzir a opcao"
-
            end-evaluate.
 
        menu_inserir.
+           display "-------------------------------------------".
            display "1. Clientes".
            display "2. Produtos".
            display "3. Faturas".
-           display "***************".
+           display "-------------------------------------------".
            display "Escolha a opcao: ".
            accept opcao.
            evaluate true
@@ -329,15 +309,17 @@
                when OPCAO = 3
                    perform inserir_faturas
                when OTHER
+                   display "-------------------------------------------"
                    DISPLAY "OPCAO INVALIDA!"
                    DISPLAY "Volte a introduzir a opcao"
            end-evaluate.
 
        menu_listar.
+           display "-------------------------------------------".
            display "1. Clientes".
            display "2. Produtos".
            display "3. Faturas".
-           display "***************".
+           display "-------------------------------------------".
            display "Escolha a opcao: ".
            accept opcao.
            evaluate true
@@ -352,13 +334,14 @@
                    DISPLAY "Volte a introduzir a opcao"
            end-evaluate.
 
-
       *inserir
        inserir_clientes.
            open i-o clientes.
            move space to reg-clientes.
            move zeros to reg-clientes.
-           display "******INFORMACOES DO CLIENTE******".
+           display "-------------------------------------------".
+           display "INFORMACOES DO CLIENTE".
+           display "-------------------------------------------".
            move index_ids_clientes to reg-clientes-id.
            display "ID: " index_ids_clientes.
            display "Nome: ".
@@ -396,22 +379,23 @@
                display "Volte a introduzir o mes: "
                accept reg-clientes-data-mes
            end-perform.
-           display "Ano de nascinento:".
+           display "Ano de nascimento: ".
            accept reg-clientes-data-ano.
            perform until (reg-clientes-data-ano > 1921 AND
                           reg-clientes-data-ano < 2021)
-               display "ERRO - o ano tem que estar entre 1921-2021"
+            display "ERRO - o ano tem que estar entre 1921-2021"
                display "Volte a introduzir o ano: "
                accept reg-clientes-data-ano
            end-perform.
-           display "**********************************".
+           display "-------------------------------------------".
            write reg-clientes
               invalid key
-              display "Codigo: " reg-clientes-id " foi registado".
+              display "Codigo:  " reg-clientes-id
+     -        " foi registado".
            close clientes.
            compute index_ids_clientes = index_ids_clientes + 1.
            perform save_ids.
-           display "Quer introduzir mais algum cliente?".
+           display "Quer introduzir mais algum cliente?: ".
            accept opcao_continuar.
            perform until (opcao_continuar = "S" or
                           opcao_continuar = "s" or
@@ -424,13 +408,14 @@
            if sim then
               perform inserir_clientes
            end-if.
-           display "-----------------".
-
+           display "-------------------------------------------".
        inserir_produtos.
            open i-o produtos.
            move space to reg-produtos.
            move zeros to reg-produtos.
-           display "******INFORMACOES DO PRODUTO******".
+           display "-------------------------------------------".
+           display "INFORMACOES DO PRODUTO".
+           display "-------------------------------------------".
            move index_ids_produtos to reg-produtos-id.
            display "ID: " index_ids_produtos.
            display "Nome: ".
@@ -444,7 +429,7 @@
                           reg-produtos-tipo = "c" or
                           reg-produtos-tipo = "C")
                 display "ERRO - Tipo de produto invalido."
-                display "Volta a introduzir o tipo de produto(l/m/c): "
+                display "Volta a introduzir o tipo de produto(l/m/c):"
                 accept reg-produtos-tipo
            end-perform.
            display "Stock: ".
@@ -460,7 +445,7 @@
            close produtos.
            compute index_ids_produtos = index_ids_produtos + 1.
            perform save_ids.
-           display "**********************************".
+           display "-------------------------------------------".
            display "Quer introduzir mais algum produto?".
            accept opcao_continuar.
            perform until (opcao_continuar = "S" or
@@ -474,18 +459,21 @@
            if sim then
               perform inserir_produtos
            end-if.
-           display "-----------------".
+           display "-------------------------------------------".
 
        inserir_faturas.
            open i-o faturas.
            move space to reg-faturas.
            move zeros to reg-faturas.
-           display "******INFORMACOES DA FATURA******".
+           display "-------------------------------------------".
+           display "INFORMACOES DA FATURA".
+           display "-------------------------------------------".
            move index_ids_faturas to reg-faturas-id.
            display "ID: " index_ids_faturas.
            accept reg-fatura-data from date yyyymmdd.
-           display "Data da fatura: " reg-faturas-dia "/"
-                  reg-faturas-mes "/" reg-faturas-ano.
+           display "Data da fatura: " reg-faturas-dia
+               "/" reg-faturas-mes  "/"
+               reg-faturas-ano 0560.
            open i-o clientes.
            move space to reg-clientes.
            move zeros to reg-clientes-id.
@@ -498,19 +486,20 @@
                 invalid key
                 move "N" to registo_encontrado
               display "Nao encontrei nenhum cliente com esse id. "
-              "Volta a introduzir um id de cliente: "
+               "Volta a introduzir um id de cliente: "
               accept reg-faturas-id-cliente
               move reg-faturas-id-cliente to reg-clientes-id
            end-perform.
            close clientes.
            write reg-faturas
               invalid key
-              display "Codigo: " reg-faturas-id " foi registada".
+              display "Codigo: " reg-faturas-id
+              " foi registada".
            close faturas.
            compute index_ids_faturas = index_ids_faturas + 1.
            perform save_ids.
-           display "**********************************".
-           display "Quer introduzir mais alguma fatura?".
+           display "-------------------------------------------".
+           display "Quer introduzir mais alguma fatura?" .
            accept opcao_continuar.
            perform until (opcao_continuar = "S" or
                           opcao_continuar = "s" or
@@ -523,33 +512,42 @@
            if sim then
               perform inserir_faturas
            end-if.
-           display "-----------------".
+           display "-------------------------------------------".
 
+      *
        listar_clientes.
            open input clientes.
            if fs-clientes equal zeros
-              display "******INFORMACOES DOS CLIENTES******"
+            display "-------------------------------------------"
+              display "INFORMACOES DOS CLIENTES"
+            display "-------------------------------------------"
               read clientes next
               perform until fs-clientes equal "10"
                 display "ID: " reg-clientes-id
                 display "Nome: " reg-clientes-nome
-                display "Data de nascimento: " reg-clientes-data-dia "/"
-                reg-clientes-data-mes "/" reg-clientes-data-ano
+                display "Data de nascimento: "
+                reg-clientes-data-dia "/"
+                reg-clientes-data-mes "/"
+                reg-clientes-data-ano
                 display "Morada: " reg-clientes-morada
                 display "Telemovel: " reg-clientes-telefone
                 display "NIF: " reg-clientes-nif
                 read clientes next
               end-perform
-              display "**********************************"
+           display "-------------------------------------------"
            else
+              display "-----------------------------------------"
               display "Não tens nenhum cliente registado"
+              display "-----------------------------------------"
            end-if.
            close clientes.
 
        listar_produtos.
            open input produtos.
            if fs-produtos equal zeros
-              display "******INFORMACOES DOS PRODUTOS******"
+            display "-------------------------------------------"
+              display "INFORMACOES DOS PRODUTOS"
+            display "-------------------------------------------"
               read produtos next
               perform until fs-produtos equal "10"
                  display "ID: " reg-produtos-id
@@ -558,37 +556,45 @@
                  display "Stock: " reg-produtos-stock
                  read produtos next
               end-perform
-              display "**********************************"
+               accept opcao_continuar
            else
-              display "Não tens nehum produto registado"
+              display "-----------------------------------------"
+              display "Não tens nenhum cliente registado"
+              display "-----------------------------------------"
            end-if.
            close produtos.
 
        listar_faturas.
            open input faturas.
            if fs-faturas equal zeros
-               display "******INFORMACOES DAS FATURAS******"
+            display "-------------------------------------------"
+               display "INFORMACOES DAS FATURAS"
+            display "-------------------------------------------"
                read faturas next
                perform until fs-faturas equal "10"
                   display "ID: " reg-faturas-id
-                  display "Data da fatura: " reg-faturas-dia "/"
-                  reg-faturas-mes "/" reg-faturas-ano
-                  display "Id do cliente: " reg-faturas-id-cliente 
+                  display "Data da fatura: "
+                  reg-faturas-dia "/"
+                  reg-faturas-mes "/"
+                  reg-faturas-ano
+                  display "Id do cliente: "
+                  reg-faturas-id-cliente
                   read faturas next
                end-perform
-               display "**********************************"
+              display "-----------------------------------------"
            else
+              display "-----------------------------------------"
               display "Nao tens nenhuma fatura registada"
+              display "-----------------------------------------"
            end-if.
-           close faturas.           
-
+           close faturas.
       *alterar
        alterar_clientes.
            open i-o clientes.
            move space to reg-clientes.
            move zeros to reg-clientes.
-           display "Qual e o ID do cliente do qual quer alterar os"
-               " dados?: ".
+            display "-------------------------------------------".
+           display "Qual e o ID do cliente do qual quer alterar os".
            accept x.
            move x to reg-clientes-id.
            move "S" to registo_encontrado.
@@ -596,17 +602,22 @@
                invalid key
                move "N" to registo_encontrado.
            if registo_encontrado = "N"
+            display "-------------------------------------------"
                display "Registo nao foi encontrado"
+            display "-------------------------------------------"
            else
+            display "-------------------------------------------"
                display "Registro encontrado"
+            display "-------------------------------------------"
                perform alterar_registo.
            close clientes.
 
        alterar_registo.
-           display "O que e que voce quer alterar?"
+           display "-------------------------------------------".
+           display "O que e que voce quer alterar?".
            display "1. Nome".
-           display "2. Morada".
-           display "3. Telefone".
+           display "2. Morada ".
+           display "3. Telefone ".
            display "4. NIF".
            display "5. Dia de nascimiento".
            display "6. Mes de nascimiento".
@@ -615,17 +626,17 @@
            accept OPCAO.
            evaluate true
                when OPCAO = 1
-                   display "*****NOVO NOME*****"
+                   display "------NOVO NOME------"
                    display "Nome: "
                    accept reg-clientes-nome
                    perform reescrever-registo
                when OPCAO = 2
-                   display "*****NOVA MORADA*****"
+                   display "------NOVA MORADA------"
                    display "Morada: "
                    accept reg-clientes-morada
                    perform reescrever-registo
                when OPCAO = 3
-                   display "*****NOVO TELEFONE*****"
+                   display "------NOVO TELEFONE------"
                    display "Telefone: "
                    accept reg-clientes-telefone
                    perform until reg-clientes-telefone is numeric
@@ -635,18 +646,18 @@
                    end-perform
                    perform reescrever-registo
                when OPCAO = 4
-                   display "*****NOVO NIF*****"
+                   display "------NOVO NIF------"
                    display "NIF: "
                    accept reg-clientes-nif
                    perform until reg-clientes-nif is numeric
                      display "ERRO - o NIF nao pode conter caracteres, "
-     -                 "so numeros"
+     -                 "so numeros."
                        display "Volte a introduzir o NIF: "
                        accept reg-clientes-nif
                    end-perform
                    perform reescrever-registo
                when OPCAO = 5
-                   display "*****NOVO DIA DE NASCIMENTO*****"
+                   display "------NOVO DIA DE NASCIMENTO------"
                    display "Dia de nascimento: "
                    accept reg-clientes-data-dia
                    perform until (reg-clientes-data-dia > 0 and
@@ -657,7 +668,7 @@
                    end-perform
                    perform reescrever-registo
                 when OPCAO = 6
-                   display "*****NOVO MES DE NASCIMENTO*****"
+                   display "------NOVO MES DE NASCIMENTO------"
                    display "Mes de nascimento: "
                    accept reg-clientes-data-mes
                    perform until (reg-clientes-data-mes > 0 and
@@ -667,20 +678,21 @@
                        accept reg-clientes-data-mes
                    end-perform
                    perform reescrever-registo
-                when OPCAO = 7
-                   display "*****NOVO ANO DE NASCIMENTO*****"
-                   display "Ano de nascinento:"
-                   perform until (reg-clientes-data-ano > 1921 AND    
+                when OPCAO = 70
+                   display "------NOVO ANO DE NASCIMENTO------"
+                   display "Ano de nascimento:"
+                   accept reg-clientes-data-ano
+                   perform until (reg-clientes-data-ano > 1921 AND
                                   reg-clientes-data-ano < 2021)
                     display "ERRO - o ano tem que estar entre 1921-2021"
                        display "Volte a introduzir o ano: "
                        accept reg-clientes-data-ano
-                   end-perform                       
-                   accept reg-clientes-data-ano
+                   end-perform
                    perform reescrever-registo
                when other
+            display "-------------------------------------------"
                    display "OPCAO INVALIDA!"
-                   display "Volte a introduzir a opcao"
+                   display "Volte a introduzir a opcao."
                   continue
            end-evaluate.
 
@@ -691,34 +703,39 @@
 
       *eliminar
        eliminar_clientes.
+           display "-------------------------------------------"
            open i-o clientes.
            move "S" to registo_encontrado.
            move space to reg-clientes.
            move zeros to reg-clientes-id.
-           display "Qual e o ID do cliente do que quer apagar? ".
+           display "Qual e o ID do cliente do que quer apagar? "
            accept x.
            move x to reg-clientes-id.
            read clientes record
               invalid key
                  move "N" to registo_encontrado.
            if registo_encontrado = "N"
-              display "Não encontrei nenhum cliente com esse id"
+               display "-------------------------------------------"
+               display "Não encontrei nenhum cliente com esse id"
            else
               perform encontrar-registo-cliente.
-
            close clientes.
 
        encontrar-registo-cliente.
+           display "-------------------------------------------".
            display "Dados a eliminar ".
+           display "-------------------------------------------".
            display "ID: " reg-clientes-id.
            display "Nome: " reg-clientes-nome.
-           display "Data de nascimento: " reg-clientes-data-dia "/"
-                reg-clientes-data-mes "/" reg-clientes-data-ano.
+           display "Data de nascimento: "
+               reg-clientes-data-dia "/"
+               reg-clientes-data-mes "/"
+               reg-clientes-data-ano .
            display "Morada: " reg-clientes-morada.
            display "Telefone: " reg-clientes-telefone.
            display "Email: " reg-clientes-telefone.
-           display "Desaja apagar este cliente ? ".
-           accept opcao_continuar.
+           display "Desaja apagar este cliente?: ".
+           accept opcao_continuar
            perform until (opcao_continuar = "S" or
                           opcao_continuar = "s" or
                           opcao_continuar = "N" or
@@ -733,8 +750,9 @@
                  invalid key
                  display "Erro ao excluir o cliente".
 
+
        ordenar.
-           sort ord-clientes ascending sort-clientes-id
+           sort ord-clientes ascending sort-clientes-nome
            input procedure sortin-clientes
            output procedure sortout-clientes.
 
@@ -755,13 +773,32 @@
 
        sortout-clientes.
            perform pega-reg-sort.
+           perform lista-clientes until ss-clientes equal "10".
+
+       lista-clientes.
+
+           display "-------------------------------------------"
+           display "INFORMACAO DOS CLIENTE".
+           display "-------------------------------------------".
+           display "ID: " sort-clientes-id.
+           display "Nome: " sort-clientes-nome.
+           display "Data de nascimento: " clientes-data-dia"/"
+               clientes-data-mes "/" clientes-data-ano
+           display "Morada: " sort-clientes-morada.
+           display "Telemovel: " sort-clientes-telefone.
+           display "NIF: " sort-clientes-nif.
+           display "-------------------------------------------".
+           perform pega-reg-sort.
+
 
        pega-reg-sort.
            RETURN ord-clientes
                at end move "10" to ss-clientes.
 
        imprimir_clientes.
-           display "Criando o ficheiro".
+           display "-------------------------------------------"
+           display "Criando o ficheiro"
+           display "-------------------------------------------"
            open input clientes.
            open output impressao.
            read clientes next.
@@ -774,7 +811,7 @@
                 move reg-clientes-data-mes to detalhe-mes
                 move reg-clientes-data-ano to detalhe-ano
                 move reg-clientes-telefone to detalhe-telefone
-                move reg-clientes-morada to detalhe-morada 
+                move reg-clientes-morada to detalhe-morada
                 move reg-clientes-nif to detalhe-nif
                 perform imprime-linha
                 read clientes next
